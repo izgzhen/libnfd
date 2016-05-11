@@ -20,12 +20,12 @@ pub fn open_dialog<'a>(filter_list: Option<&str>, default_path: Option<&str>) ->
         let out_path: *mut (*mut nfdchar_t) = &mut ptr::null_mut();
 
         let filter_list_ptr = match filter_list {
-            Some(fl_str) => CString::new(fl_str).unwrap().as_ptr(),
+            Some(fl_str) => CString::new(fl_str).unwrap().into_raw(),
             None => std::ptr::null()
         };
 
         let default_path_ptr = match default_path {
-            Some(s) => CString::new(s).unwrap().as_ptr(),
+            Some(s) => CString::new(s).unwrap().into_raw(),
             None => std::ptr::null()
         };
 
@@ -60,12 +60,12 @@ pub fn open_dialog_multiple(filter_list: Option<&str>, default_path: Option<&str
                                                   count: 0 }));
 
         let filter_list_ptr = match filter_list {
-            Some(fl_str) => CString::new(fl_str).unwrap().as_ptr(),
+            Some(fl_str) => CString::new(fl_str).unwrap().into_raw(),
             None => std::ptr::null()
         };
 
         let default_path_ptr = match default_path {
-            Some(s) => CString::new(s).unwrap().as_ptr(),
+            Some(s) => CString::new(s).unwrap().into_raw(),
             None => std::ptr::null()
         };
 
