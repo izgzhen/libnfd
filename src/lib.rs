@@ -1,8 +1,14 @@
 extern crate nfd_sys;
 extern crate libc;
 
+#[cfg(unix)]
+use std::os::unix::ffi::OsStrExt;
+
+#[cfg(windows)]
+use std::os::windows::ffi::OsStrExt;
+
 use std::ptr;
-use std::ffi::CString;
+use std::ffi::{CString, OsStr};
 use libc::size_t;
 use nfd_sys::*;
 use std::path::PathBuf;
@@ -32,12 +38,8 @@ pub fn open_dialog<'a>(filter_list: Option<&str>, default_path: Option<&str>) ->
         match NFD_OpenDialog(filter_list_ptr, default_path_ptr, out_path) {
             nfdresult_t::NFD_ERROR => Err(NFDErrorType::ProgrammaticError),
             nfdresult_t::NFD_OKAY => {
-                // FIXME: Use bytes directly instead
-                // let bytes : Vec<u8> = CString::from_raw(*out_path).into_bytes();
-                // let s = OsString::_from_bytes(bytes);
-
-                let s = CString::from_raw(*out_path).into_string().unwrap();
-                Ok(PathBuf::from(&s))
+                let bytes : Vec<u8> = CString::from_raw(*out_path).into_bytes();
+                Ok(PathBuf::from(osstr_from_bytes(&bytes)))
             }
             nfdresult_t::NFD_CANCEL => Err(NFDErrorType::CancelledByUser),
         }
@@ -45,9 +47,9 @@ pub fn open_dialog<'a>(filter_list: Option<&str>, default_path: Option<&str>) ->
 }
 
 #[inline]
+// The only difference is in implementation: save_dialog will have an overwrite confirmation
+// But the interface is same
 pub fn save_dialog(filter_list: Option<&str>, default_path: Option<&str>) -> NFDResult<PathBuf> {
-    // The only difference is in implementation: save_dialog will have an overwrite confirmation
-    // But the interface is same
     open_dialog(filter_list, default_path)
 }
 
@@ -80,15 +82,15 @@ pub fn open_dialog_multiple(filter_list: Option<&str>, default_path: Option<&str
                     let ptr = NFD_PathSet_GetPath(out_pathset, indices[i]);
                     let len = indices[i + 1] - indices[i];
 
-                    // FIXME: Use bytes directly instead
                     let s = String::from_raw_parts(ptr as *mut u8, len - 1, len);
                     paths.push(PathBuf::from(&s));
                 }
 
                 let ptr = (*out_pathset).buf.offset(indices[indices.len() - 1] as isize);
-                // FIXME: Use bytes directly instead
-                let s = CString::from_raw(ptr).into_string().unwrap();
-                paths.push(PathBuf::from(&s));
+
+                let bytes : Vec<u8> = CString::from_raw(ptr).into_bytes();
+                paths.push(PathBuf::from(osstr_from_bytes(&bytes)));
+
                 NFD_PathSet_Free(out_pathset);
                 Ok(paths)
             },
@@ -105,4 +107,9 @@ pub fn get_error() -> String {
             Err(e) => panic!("{:?}", e),
         }
     }
+}
+
+
+fn osstr_from_bytes(slice: &[u8]) -> &OsStr {
+    OsStrExt::from_bytes(slice)
 }
