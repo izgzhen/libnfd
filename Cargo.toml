@@ -3,9 +3,9 @@ name = "libnfd"
 description = "High-level Rust bindings to nativefiledialog"
 license = "MIT"
 repository = "https://github.com/izgzhen/libnfd"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Zhen Zhang <izgzhen@gmail.com>"]
 
 [dependencies]
-nfd-sys = "0.1.3"
+nfd-sys = "0.1.5"
 libc = "0.2.0"
